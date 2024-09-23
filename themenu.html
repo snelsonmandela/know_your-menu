@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TheMenu</title>
+    <style>
+        /* Add some basic styling for the form */
+        body {
+            background-image: url("https://png.pngtree.com/background/20230528/original/pngtree-variety-of-indian-food-is-served-on-a-table-picture-image_2778395.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        h1 {
+            color: #ffffff;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        p {
+            font-size: 18px;
+            font-weight: bold;
+            color: #33FF57;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .bill {
+            border: 2px solid #007BFF;
+            padding: 20px;
+            margin: 20px auto;
+            text-align: left;
+            background-color: #f7f7f7;
+            max-width: 500px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+        }
+        .bill h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .bill ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .bill li {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .bill .total {
+            font-weight: bold;
+        }
+        .menu-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .menu-list li {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        .white-box {
+            background-color: white;
+            border: 2px solid #007BFF;
+            padding: 10px;
+            max-width: 500px;
+            margin: 20px auto;
+            border-radius: 20px;
+        }
+        #food-options {
+            display: flex;
+            justify-content: space-between;
+            border: 2px solid #007BFF;
+            padding: 10px;
+            max-width: 500px;
+            margin: 20px auto;
+            border-radius: 20px;
+        }
+
+        #vegOption,
+        #nonVegOption {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        label {
+            font-size: 18px;
+            cursor: pointer;
+            padding: 10px 20px;
+            flex: 1;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        #vegOption:checked + label {
+            background-color: green;
+            color: white;
+        }
+
+        #nonVegOption:checked + label {
+            background-color: red;
+            color: white;
+        }
+        @media screen and (max-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+            p {
+                font-size: 16px;
+            }
+        }
+        footer {
+            text-shadow: 2px 2px 5px #000;
+            color: white;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            font-size: 23px;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Know Your Menu</h1>
+    <p>Enjoy your Food !!!</p>
+    <input type="text" id="userName" placeholder="Enter Restaurant name">
+    <input type="number" id="userAmount" placeholder="Amount in your hand">
+    <input type="number" id="numMembers" placeholder="Number of Members">
+    <div class="white-box" id="food-options">
+        <input type="radio" id="vegOption" name="foodType" value="Veg">
+        <label for="vegOption">Veg</label>
+        <input type="radio" id="nonVegOption" name="foodType" value="Non-Veg">
+        <label for="nonVegOption">Non-Veg</label>
+    </div>
+    <button onclick="displayQuotesByName()">Get Menu</button>
+    <div id="bill-container"></div>
+    
+    <script>
+        const excelData = [
+            ["a", 150, "cb", "Veg"],
+            ["a", 350, "full grill", "Non-Veg"],
+            ["a", 120, "kothu parrota", "Veg"], 
+            ["a", 75, "noodles", "Veg"], 
+            ["a", 180, "mb", "Veg"], 
+            ["a", 130, "fried rice", "Veg"],
+            ["c", 1000, "Charlie's Quote: 'Some quote...'", "Veg"]
+        ];
+
+        const gstRate = 5; // GST rate as needed
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function displayQuotesByName() {
+            const userName = document.getElementById("userName").value;
+            const userAmount = parseFloat(document.getElementById("userAmount").value);
+            const numMembers = parseInt(document.getElementById("numMembers").value) || 1; // Default to 1 if not specified
+            const billContainer = document.getElementById("bill-container");
+            const vegOption = document.getElementById("vegOption").checked;
+            const nonVegOption = document.getElementById("nonVegOption").checked;
+
+            billContainer.innerHTML = "";
+
+            let currentAmount = 0;
+            let quotes = [];
+
+            // Filter and sort data
+            let dataClone = excelData.filter((row) => {
+                const name = row[0];
+                const amount = parseFloat(row[1]);
+                const foodType = row[3];
+                return name === userName && 
+                       (vegOption ? foodType === "Veg" : foodType === "Non-Veg") && 
+                       (amount * numMembers <= userAmount);
+            });
+
+            while (currentAmount + (currentAmount * (gstRate / 100)) <= userAmount && dataClone.length > 0) {
+                shuffleArray(dataClone);
+                let quotesNotFound = true;
+
+                for (let i = 0; i < dataClone.length; i++) {
+                    const row = dataClone[i];
+                    const amount = parseFloat(row[1]);
+                    const quoteText = row[2];
+
+                    if (currentAmount + (amount * numMembers) <= userAmount) {
+                        quotes.push({ item: quoteText, price: amount * numMembers });
+                        currentAmount += amount * numMembers;
+                        quotesNotFound = false;
+                        dataClone.splice(i, 1);
+                        i--;
+                    }
+                }
+
+                if (quotesNotFound) {
+                    break;
+                }
+            }
+
+            if (quotes.length > 0) {
+                const billElement = document.createElement("div");
+                billElement.className = "bill";
+                billElement.innerHTML = `<h2>Bill for ${userName} (x${numMembers})</h2><ul>`;
+
+                quotes.forEach((quote) => {
+                    const itemText = `${quote.item} (x${numMembers})`;
+                    billElement.innerHTML += `
+                        <li>
+                            <span>${itemText}</span>
+                            <span>Rs.${quote.price.toFixed(2)}</span>
+                        </li>`;
+                });
+
+                let total = quotes.reduce((acc, quote) => acc + quote.price, 0);
+                let gstAmount = (gstRate / 100) * total;
+                let totalIncludingGST = total + gstAmount;
+
+                billElement.innerHTML += `
+                        <li>
+                            <span>Subtotal:</span>
+                            <span>Rs.${total.toFixed(2)}</span>
+                        </li>
+                        <li>
+                            <span>GST (${gstRate}%):</span>
+                            <span>Rs.${gstAmount.toFixed(2)}</span>
+                        </li>
+                        <li class="total">
+                            <span>Total (Including GST):</span>
+                            <span>Rs.${totalIncludingGST.toFixed(2)}</span>
+                        </li>
+                        <li class="total">
+                            <span>Balance:</span>
+                            <span>Rs.${(userAmount - totalIncludingGST).toFixed(2)}</span>
+                        </li>
+                </ul>`;
+                billContainer.appendChild(billElement);
+            } else {
+                const billElement = document.createElement("div");
+                billElement.className = "bill";
+                billElement.innerHTML = `
+                    <h2>Bill for ${userName} (x${numMembers})</h2>
+                    <p>No items found within the given amount.</p>`;
+                billContainer.appendChild(billElement);
+            }
+        }
+    </script>
+</body>
+</html>
